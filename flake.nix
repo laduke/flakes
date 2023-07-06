@@ -37,15 +37,16 @@
           home-manager.users.travis = { pkgs, ... }: {
             home.stateVersion = "23.11";
             home.packages = [
-              pkgs.tmux
-              pkgs.ipcalc
-              pkgs.htop
-              pkgs.git
-              pkgs.ripgrep
               pkgs.fd
+              pkgs.git
+              pkgs.go
+              pkgs.gping
+              pkgs.htop
+              pkgs.ipcalc
               pkgs.jq
               pkgs.nodejs_18
-              pkgs.go
+              pkgs.ripgrep
+              pkgs.tmux
             ];
 
             home.sessionPath = [
@@ -67,6 +68,9 @@
               enable = true;
               shellAliases = {
                 ll = "ls -l";
+                zt-load = "sudo launchctl load /Library/LaunchDaemons/com.zerotier.one.plist";
+                zt-unload = "sudo launchctl unload /Library/LaunchDaemons/com.zerotier.one.plist";
+                zt = "zerotier-cli";
               };
 
               initExtra = ''
