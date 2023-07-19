@@ -9,9 +9,11 @@
 
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
+
+    rust-overlay.url = "github:oxalica/rust-overlay";
   };
 
-  outputs = inputs@{ self, nix-darwin, nixpkgs, home-manager }:
+  outputs = inputs@{ self, nix-darwin, nixpkgs, home-manager, rust-overlay }:
   let
     configuration = { pkgs, ... }: {
       # List packages installed in system profile. To search by name, run:
@@ -37,6 +39,8 @@
 
       # The platform the configuration will be used on.
       nixpkgs.hostPlatform = "aarch64-darwin";
+
+      nixpkgs.config.permittedInsecurePackages = ["nodejs-16.20.1"];
 
       users.users.travis.home = "/Users/travis";
 
@@ -74,13 +78,21 @@
       darwinConfigurations.cattail = nix-darwin.lib.darwinSystem {
         system = "aarch64-darwin";
         modules = [ configuration
-                    # ./hosts/cattail/default.nix
+                    ({ pkgs, ... }: {
+                      nixpkgs.overlays = [ rust-overlay.overlays.default ];
+                      environment.systemPackages = [
+                        (pkgs.rust-bin.stable.latest.default.override {
+                          targets = [ "x86_64-apple-darwin" ];
+                        })
+                      ];
+                    })
 
 
                     home-manager.darwinModules.home-manager {
                       home-manager.useGlobalPkgs = true;
                       home-manager.useUserPackages = true;
-                      home-manager.users.travis = { pkgs, ... }: {
+                      home-manager.users.travis = { pkgs, ... }:
+                        {
                         home.stateVersion = "23.11";
                         home.packages = [
                           pkgs.cloud-sql-proxy
@@ -95,6 +107,8 @@
                           pkgs.ipcalc
                           pkgs.iperf3
                           pkgs.jq
+                          pkgs.meson
+                          pkgs.ninja
                           pkgs.nix-direnv
                           pkgs.nmap
                           pkgs.nodePackages.eslint
