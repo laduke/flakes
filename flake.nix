@@ -44,9 +44,10 @@
 
       users.users.travis.home = "/Users/travis";
 
+
       homebrew = {
         enable = true;
-        onActivation.autoUpdate = true;
+        onActivation.autoUpdate = false;
         # updates homebrew packages on activation,
         # can make darwin-rebuild much slower (otherwise i'd forget to do it ever though)
         casks = [
@@ -81,6 +82,7 @@
                     ({ pkgs, ... }: {
                       nixpkgs.overlays = [ rust-overlay.overlays.default ];
                       environment.systemPackages = [
+                            pkgs.cargo-watch
                         (pkgs.rust-bin.stable.latest.default.override {
                           targets = [ "x86_64-apple-darwin" ];
                         })
@@ -88,82 +90,114 @@
                     })
 
 
+
                     home-manager.darwinModules.home-manager {
                       home-manager.useGlobalPkgs = true;
                       home-manager.useUserPackages = true;
                       home-manager.users.travis = { pkgs, ... }:
                         {
-                        home.stateVersion = "23.11";
-                        home.packages = [
-                          pkgs.cloud-sql-proxy
-                          pkgs.direnv
-                          pkgs.fd
-                          pkgs.git
-                          pkgs.go
-                          pkgs.google-cloud-sdk
-                          pkgs.gping
-                          pkgs.graphviz
-                          pkgs.htop
-                          pkgs.ipcalc
-                          pkgs.iperf3
-                          pkgs.jq
-                          pkgs.meson
-                          pkgs.ninja
-                          pkgs.nix-direnv
-                          pkgs.nmap
-                          pkgs.nodePackages.eslint
-                          pkgs.nodePackages.yarn
-                          pkgs.nodePackages.typescript-language-server
-                          pkgs.nodejs_18
-                          pkgs.ripgrep
-                          pkgs.sqlite
-                          pkgs.tmux
-                        ];
+                          home.stateVersion = "23.11";
+                          home.packages = [
+                            pkgs.unixtools.watch
+                            pkgs.act
+                            pkgs.stripe-cli
+                            pkgs.pandoc
+                            pkgs.nodePackages.node2nix
+                            pkgs.clang-tools
+                            pkgs.cloud-sql-proxy
+                            pkgs.cmake
+                            pkgs.direnv
+                            pkgs.drone-cli
+                            pkgs.esbuild
+                            pkgs.fd
+                            pkgs.git
+                            pkgs.go
+                            pkgs.google-cloud-sdk
+                            pkgs.gping
+                            pkgs.graphviz
+                            pkgs.htop
+                            pkgs.ipcalc
+                            pkgs.iperf3
+                            pkgs.jq
+                            pkgs.meson
+                            pkgs.ninja
+                            pkgs.nix-direnv
+                            pkgs.nmap
+                            pkgs.nodePackages.eslint
+                            pkgs.nodePackages.live-server
+                            pkgs.nodePackages.typescript
+                            pkgs.nodePackages.typescript-language-server
+                            pkgs.nodePackages.yarn
+                            pkgs.nodejs_18
+                            pkgs.ripgrep
+                            pkgs.sqlite
+                            pkgs.tmux
+                          ];
 
-                        home.sessionPath = [
-                          "$HOME/.config/emacs/bin"
-                          "$HOME/go/bin"
-                        ];
+                          home.sessionPath = [
+                            "$HOME/.config/emacs/bin"
+                            "$HOME/go/bin"
+                          ];
 
-                        home.sessionVariables = {
-                          EDITOR = "vim";
-                        };
-
-                        programs.direnv = {
-                          enable = true;
-                        };
-
-                        # programs.nix-direnv = {
-                        #   enable = true;
-                        # };
-
-                        programs.git = {
-                          enable = true;
-                          userName = "travisladuke";
-                          userEmail = "travisladuke@gmail.com";
-                        };
-
-                        programs.zsh  = {
-                          enable = true;
-                          shellAliases = {
-                            cloudsql = "cloud_sql_proxy -instances=zerotier-central:us-central1:pgsql14-ztcentral-us-central1=tcp:5433";
-                            dnsclear = "sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder";
-                            dug = "dscacheutil -q host -a name";
-                            ll = "ls -l";
-                            zt = "zerotier-cli";
-                            zt-load = "sudo launchctl load /Library/LaunchDaemons/com.zerotier.one.plist";
-                            zt-unload = "sudo launchctl unload /Library/LaunchDaemons/com.zerotier.one.plist";
+                          home.sessionVariables = {
+                            DRONE_SERVER="http://drone.ci.lab";
+                            EDITOR = "vim";
                           };
 
-                          initExtra = ''
+                          programs.direnv = {
+                            enable = true;
+                          };
+
+                          programs.tmux = {
+                            enable = true;
+                            mouse = true;
+                            extraConfig = ''
+                              bind-key -T copy-mode-vi 'y' send -X copy-pipe-and-cancel 'reattach-to-user-namespace pbcopy'
+                              bind-key -T copy-mode-vi Enter send -X copy-pipe-and-cancel 'reattach-to-user-namespace pbcopy'
+                            '';
+                            plugins = with pkgs; [
+                              # tmuxPlugins.yank # not needed. the above works -the way i want it to anyways
+                            ];
+                          };
+
+                          # programs.nix-direnv = {
+                          #   enable = true;
+                          # };
+
+                          programs.git = {
+                            enable = true;
+                            userName = "travisladuke";
+                            userEmail = "travisladuke@gmail.com";
+                          };
+
+                          programs.zsh  = {
+                            enable = true;
+                            shellAliases = {
+                              cloudsql = "cloud_sql_proxy -instances=zerotier-central:us-central1:pgsql14-ztcentral-us-central1=tcp:5433";
+                              dnsclear = "sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder";
+                              dug = "dscacheutil -q host -a name";
+                              ll = "ls -l";
+                              zt = "zerotier-cli";
+                              zt-load = "sudo launchctl load /Library/LaunchDaemons/com.zerotier.one.plist";
+                              zt-unload = "sudo launchctl unload /Library/LaunchDaemons/com.zerotier.one.plist";
+                            };
+
+                            initExtra = ''
                           if [[ $(uname -m) == 'arm64' ]]; then
                             eval "$(/opt/homebrew/bin/brew shellenv)"
-                              fi
-                        '';
+                          fi
+
+                          add-key () {
+                              security add-generic-password -a "$USER" -s $1 -w
+                          }
+                          get-key () {
+                              security find-generic-password -a "$USER" -s $1 -w
+                          }
+                          '';
+
+                          };
 
                         };
-
-                      };
                     }
                   ];
       };
