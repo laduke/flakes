@@ -98,11 +98,8 @@
                         {
                           home.stateVersion = "23.11";
                           home.packages = [
-                            pkgs.unixtools.watch
                             pkgs.act
-                            pkgs.stripe-cli
-                            pkgs.pandoc
-                            pkgs.nodePackages.node2nix
+                            pkgs.bazelisk
                             pkgs.clang-tools
                             pkgs.cloud-sql-proxy
                             pkgs.cmake
@@ -110,9 +107,11 @@
                             pkgs.drone-cli
                             pkgs.esbuild
                             pkgs.fd
+                            pkgs.fping
                             pkgs.git
                             pkgs.go
                             pkgs.google-cloud-sdk
+                            pkgs.gping
                             pkgs.gping
                             pkgs.graphviz
                             pkgs.htop
@@ -125,18 +124,23 @@
                             pkgs.nmap
                             pkgs.nodePackages.eslint
                             pkgs.nodePackages.live-server
+                            pkgs.nodePackages.node2nix
                             pkgs.nodePackages.typescript
                             pkgs.nodePackages.typescript-language-server
                             pkgs.nodePackages.yarn
                             pkgs.nodejs_18
+                            pkgs.pandoc
                             pkgs.ripgrep
                             pkgs.sqlite
+                            pkgs.stripe-cli
                             pkgs.tmux
+                            pkgs.unixtools.watch
                           ];
 
                           home.sessionPath = [
                             "$HOME/.config/emacs/bin"
                             "$HOME/go/bin"
+                            "$HOME/.cargo/bin"
                           ];
 
                           home.sessionVariables = {
@@ -152,8 +156,7 @@
                             enable = true;
                             mouse = true;
                             extraConfig = ''
-                              bind-key -T copy-mode-vi 'y' send -X copy-pipe-and-cancel 'reattach-to-user-namespace pbcopy'
-                              bind-key -T copy-mode-vi Enter send -X copy-pipe-and-cancel 'reattach-to-user-namespace pbcopy'
+                              set -s copy-command 'pbcopy'
                             '';
                             plugins = with pkgs; [
                               # tmuxPlugins.yank # not needed. the above works -the way i want it to anyways
