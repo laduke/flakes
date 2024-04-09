@@ -51,16 +51,20 @@
         # updates homebrew packages on activation,
         # can make darwin-rebuild much slower (otherwise i'd forget to do it ever though)
         casks = [
-          # "rectangle" spectacle fork
-          "amethyst" # tiling
+          "rectangle" # spectacle fork
+          # "amethyst" # tiling
           "discord"
           "zoom"
           "signal"
           "steam"
+          "visual-studio-code"
         ];
         taps = [ "d12frosted/emacs-plus" ];
 
         brews = [
+          "corepack"
+          "ansible"
+          "redis"
           "gh"
           {
             name = "emacs-plus@28";
@@ -99,6 +103,7 @@
                           home.stateVersion = "23.11";
                           home.packages = [
                             pkgs.act
+                            pkgs.bazel-buildtools
                             pkgs.bazelisk
                             pkgs.clang-tools
                             pkgs.cloud-sql-proxy
@@ -110,30 +115,34 @@
                             pkgs.fping
                             pkgs.git
                             pkgs.go
+                            pkgs.gopls
                             pkgs.google-cloud-sdk
                             pkgs.gping
                             pkgs.gping
+                            pkgs.html-tidy
                             pkgs.graphviz
                             pkgs.htop
                             pkgs.ipcalc
                             pkgs.iperf3
+                            pkgs.ispell
                             pkgs.jq
                             pkgs.meson
                             pkgs.ninja
                             pkgs.nix-direnv
                             pkgs.nmap
-                            pkgs.nodePackages.eslint
-                            pkgs.nodePackages.live-server
-                            pkgs.nodePackages.node2nix
-                            pkgs.nodePackages.typescript
-                            pkgs.nodePackages.typescript-language-server
-                            pkgs.nodePackages.yarn
-                            pkgs.nodejs_18
+                            # pkgs.nodePackages.eslint
+                            # pkgs.nodePackages.live-server
+                            # pkgs.nodePackages.node2nix
+                            # pkgs.nodePackages.typescript
+                            # pkgs.nodePackages.typescript-language-server
+                            # pkgs.nodejs_18
                             pkgs.pandoc
                             pkgs.ripgrep
                             pkgs.sqlite
                             pkgs.stripe-cli
+                            pkgs.terraform
                             pkgs.tmux
+                            pkgs.ffmpeg
                             pkgs.unixtools.watch
                           ];
 
@@ -146,6 +155,10 @@
                           home.sessionVariables = {
                             DRONE_SERVER="http://drone.ci.lab";
                             EDITOR = "vim";
+                            GOPROXY = "http://goproxy.int.zerotier.com:3000";
+                            GOPRIVATE = "github.com/zerotier";
+                            GONOPROXY = "none";
+                            NVM_DIR = "$HOME/.nvm";
                           };
 
                           programs.direnv = {
@@ -171,6 +184,9 @@
                             enable = true;
                             userName = "travisladuke";
                             userEmail = "travisladuke@gmail.com";
+                            extraConfig = {
+                              diff.algorithm = "patience";
+                            };
                           };
 
                           programs.zsh  = {
@@ -183,6 +199,9 @@
                               zt = "zerotier-cli";
                               zt-load = "sudo launchctl load /Library/LaunchDaemons/com.zerotier.one.plist";
                               zt-unload = "sudo launchctl unload /Library/LaunchDaemons/com.zerotier.one.plist";
+                              sleepoff="sudo pmset -a disablesleep 1";
+                              sleepon="sudo pmset -a disablesleep 0";
+                              zt-auth="zerotier-cli listnetworks -j | jq -r '.[] | select(.status == \"AUTHENTICATION_REQUIRED\") | .authenticationURL | values ' | xargs open";
                             };
 
                             initExtra = ''
@@ -196,6 +215,7 @@
                           get-key () {
                               security find-generic-password -a "$USER" -s $1 -w
                           }
+                          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
                           '';
 
                           };
